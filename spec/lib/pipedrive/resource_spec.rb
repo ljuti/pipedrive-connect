@@ -11,8 +11,8 @@ module Pipedrive
 end
 
 RSpec.describe Pipedrive::Resourceable do
-  let(:stubs)  { Faraday::Adapter::Test::Stubs.new }
-  let(:conn)   { Faraday.new { |b| b.adapter(:test, stubs) } }
+  let(:stubs) { Faraday::Adapter::Test::Stubs.new }
+  let(:conn) { Faraday.new { |b| b.adapter(:test, stubs) } }
 
   before do
     allow(Faraday).to receive(:new).and_return(conn)
@@ -75,7 +75,7 @@ RSpec.describe Pipedrive::Resourceable do
         end
 
         it "returns an empty array" do
-          expect(described_class.all).to eq([])
+          expect(described_class.all.last).to eq([])
         end
       end
 
@@ -92,21 +92,21 @@ RSpec.describe Pipedrive::Resourceable do
                 }, {
                   "id": 2,
                   "name": "R2",
-                },],
+                }],
               }.to_json,
             ]
           end
+        end
 
-          it "returns the array of instances" do
-            all = described_class.all
-            expect(all).to be_present
-            expect(all.count).to be 2
-            expect(all.first).to be_a(described_class)
-            expect(all.first.id).to be 1
-            expect(all.first.name).to be "R1"
-            expect(all.last.id).to be 2
-            expect(all.last.name).to be "R2"
-          end
+        it "returns the array of instances" do
+          all = described_class.all
+          expect(all).to be_truthy
+          expect(all.count).to eq 2
+          expect(all.last.first).to be_a(described_class)
+          expect(all.last.first.id).to eq 1
+          expect(all.last.first.name).to eq "R1"
+          expect(all.last.last.id).to eq 2
+          expect(all.last.last.name).to eq "R2"
         end
       end
     end
@@ -125,7 +125,7 @@ RSpec.describe Pipedrive::Resourceable do
         end
 
         it "returns an empty array" do
-          expect(described_class.search("Get on Board")).to eq([])
+          expect(described_class.search("Get on Board").last).to eq []
         end
       end
 
@@ -135,7 +135,7 @@ RSpec.describe Pipedrive::Resourceable do
             expect(env.params).to include(
               "term" => "Get on Board",
               "fields" => %i[name address].join(","),
-              "exact_match" => true
+              "exact_match" => true,
             )
             [
               200,
@@ -148,7 +148,7 @@ RSpec.describe Pipedrive::Resourceable do
                   }, {
                     "id": 2,
                     "name": "R2",
-                  },],
+                  }],
                 },
               }.to_json,
             ]
@@ -288,7 +288,7 @@ RSpec.describe Pipedrive::Resourceable do
           expect(req_body).to include(
             name: "Get on Board",
             address: "CL/PE/US",
-            "abcdefghijklmnopqrstuvwsyz": "newdomain.com"
+            "abcdefghijklmnopqrstuvwsyz": "newdomain.com",
           )
           [
             200,
@@ -308,7 +308,7 @@ RSpec.describe Pipedrive::Resourceable do
         described_class.create(
           name: "Get on Board",
           address: "CL/PE/US",
-          domain: "newdomain.com"
+          domain: "newdomain.com",
         )
       end
 
@@ -324,7 +324,7 @@ RSpec.describe Pipedrive::Resourceable do
           req_body = JSON.parse(env.body, symbolize_names: true)
           expect(req_body).to include(
             name: "Get on Board",
-            address: "CL/PE/US"
+            address: "CL/PE/US",
           )
           [
             200,
@@ -345,14 +345,14 @@ RSpec.describe Pipedrive::Resourceable do
         described_class.new(
           id: 1,
           name: "Another name",
-          address: "Another address"
+          address: "Another address",
         )
       end
 
       it "sends put request and updates the instance's attribute" do
         subject.update(
           name: "Get on Board",
-          address: "CL/PE/US"
+          address: "CL/PE/US",
         )
         expect(subject.id).to eq(1)
         expect(subject.name).to eq("Get on Board")
@@ -378,7 +378,7 @@ RSpec.describe Pipedrive::Resourceable do
         described_class.new(
           id: 1,
           name: "Get on Board",
-          address: "CL/PE/US"
+          address: "CL/PE/US",
         )
       end
 
@@ -415,6 +415,7 @@ RSpec.describe Pipedrive::Resourceable do
       module Pipedrive
         class Whatever < Resource; end
       end
+
       before do
         allow(Pipedrive).to receive(:api_key).and_return("abc123")
         stubs.get("resourceables/1/whatevers") do

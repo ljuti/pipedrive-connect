@@ -12,6 +12,7 @@ require "pipedrive/api_operations/request"
 require "pipedrive/api_operations/create"
 require "pipedrive/api_operations/update"
 require "pipedrive/api_operations/delete"
+require "pipedrive/api_response"
 
 # Support classes
 require "pipedrive/resource"

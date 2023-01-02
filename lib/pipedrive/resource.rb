@@ -3,14 +3,14 @@
 module Pipedrive
   class Resource
     include Pipedrive::APIOperations::Request
-    extend  Pipedrive::APIOperations::Create
+    extend Pipedrive::APIOperations::Create
     include Pipedrive::APIOperations::Update
     include Pipedrive::APIOperations::Delete
 
     class << self
       attr_accessor :resources_url
 
-      def update_method(method_override=nil)
+      def update_method(method_override = nil)
         @update_method ||= method_override
       end
 
@@ -54,7 +54,8 @@ module Pipedrive
 
       def all(params = {})
         response = request(:get, resource_url, params)
-        response.dig(:data)&.map { |d| new(d) }
+        resources = response.dig(:data)&.map { |d| new(d) }
+        [APIResponse.from(response), resources]
       end
 
       def search(term, params = {})
@@ -63,7 +64,8 @@ module Pipedrive
           "#{resource_url}/search",
           { term: term }.merge(params)
         )
-        response.dig(:data, :items).map { |d| new(d.dig(:item)) }
+        resources = response.dig(:data, :items).map { |d| new(d.dig(:item)) }
+        [APIResponse.from(response), resources]
       end
 
       def has_many(resource_name, class_name:)
@@ -78,8 +80,8 @@ module Pipedrive
         class_name = "::Pipedrive::#{class_name}" unless class_name.include?("Pipedrive")
         define_method(resource_name) do |params = {}|
           response = request(:get,
-                            "#{resource_url}/#{resource_name}",
-                            params.merge(options))
+                             "#{resource_url}/#{resource_name}",
+                             params.merge(options))
           response.dig(:data)&.map do |data|
             class_name_as_sym = class_name_lower_case.to_sym
             data[:metadata] = data
@@ -164,6 +166,7 @@ module Pipedrive
     def no_content?
       @data.nil? || @data.empty?
     end
+
     alias empty? no_content?
   end
 end
